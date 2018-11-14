@@ -96,6 +96,61 @@ def radar_plot_day(measurename,screenname,twoddict):
     plt.show()
     return;
     
+#TO DO: JOIN RADAR PLOTS INTO ONE PROCEDURE
+def radar_plot_week(measurename,screenname,twoddict):
+    titlestring = measurename + " : " + screenname
+    currentdf = twoddict[measurename]
+    sr = currentdf[accountname]
+    oldlabelslist = sr.keys()
+    oldnumlabels = len(oldlabelslist)
+    oldvalueslist = []
+    valueslist = []
+    angleslist = []
+    labelslist = []
+    angles2list = []
+    labels2list = []
+    daysofweek=['Mo','Tu','We','Th','Fr','Sa','Su']
+    for i in range (0,oldnumlabels):
+        oldvalueslist.append(int(sr[oldlabelslist[i]]))
+    numlabels = oldnumlabels/12
+    numlabels = int(numlabels)
+    for i in range (0, numlabels):
+        value=0
+        for j in range (0, 12):
+            index = i*12 + j
+            value +=oldvalueslist[index]
+        valueslist.append(value)
+
+        newangle = 2.0*3.14159*float(-1*i)/float(numlabels) + 3.14159/2.0 
+        if newangle >= 2.0 * 3.14159:
+            newangle = newangle - 2*3.14159
+        elif newangle < 0:
+            newangle = newangle + 2*3.14159
+        angleslist.append(newangle)
+        labelslist.append(round(int(oldlabelslist[i])/3600,2))
+        angles2list.append(newangle)
+        if i%4 == 0:
+            labels2list.append(daysofweek[int(i/4)])
+        else:
+            labels2list.append("")
+    
+    valueslist.append(valueslist[0])
+    angleslist.append(angleslist[0])
+    labels = np.array(labelslist)
+    values = np.array(valueslist)
+    angles = np.array(angleslist)
+    angles2 = np.array(angles2list)
+    labels2 = np.array(labels2list)
+    fig=plt.figure()
+    ax = fig.add_subplot(111, polar=True)
+    ax.plot(angles, values, 'o-', color="red", linewidth=2)
+    ax.fill(angles, values, "r",alpha=0.25)
+    ax.set_thetagrids(angles2 * 180/np.pi, labels2)
+    ax.set_title(titlestring)
+    ax.grid(True)
+    plt.show()
+    return;
+
 
 ### MAIN BODY ###
 
@@ -169,8 +224,8 @@ while keepgoing:
     print("P1 = 1d plot; P1L, P1LL = 1d plot, semilog, log;")
     print ("C1, C1L, etc. = as above, but with color as 3rd dimension;")
     print ("P2 = 2d plot; M2 = Multiple 2d series in one plot.")
-    print ("RD = radar plot.")
-    print ("Screening tools: SR = radar; S2 = 2d.")
+    print ("RD = day radar plot; RW = week radar plot.")
+    print ("Screening tools: SR = day radar; SW = week radar; S2 = 2d.")
     command = input(">>> ")
     if command in ["Exit","EXIT","exit"]:
         keepgoing = False
@@ -243,6 +298,10 @@ while keepgoing:
         variablename = input("   Measure name: ")
         accountname = input ("   Account name: ")
         radar_plot_day(variablename,accountname,twodimensional_dataframe_dict)
+    elif command in ["RW","rw"]:
+        variablename = input("   Measure name: ")
+        accountname = input ("   Account name: ")
+        radar_plot_week(variablename,accountname,twodimensional_dataframe_dict)
     elif command in ["C1","c1","c1ll","C1LL","c1l","C1L"]:
         df = onedimensional_dataframe.copy()
         xaxisvar = input("   X-axis measure: ")
@@ -285,7 +344,7 @@ while keepgoing:
             print ("    ",colortypelist[i],"<>",i)
         df.plot(x=xaxisvar,y=yaxisvar,c=colortypearray, kind = 'scatter',s=20,cmap='gist_ncar',alpha=0.7)
         plt.show()
-    if command in ["SR","sr","S2","s2"]:
+    elif command in ["SR","sr","sw","SW","S2","s2"]:
         if command in ["SR","sr"]:
             variablename = input("    Variable name? [daytweethisto] ")
             if variablename == "":
@@ -295,7 +354,16 @@ while keepgoing:
                     radar_plot_day(variablename,accountname,twodimensional_dataframe_dict)
                 except:
                     print("Exception:",accountname)
-        if command in ["S2","s2"]:
+        elif command in ["SW","sw"]:
+            variablename = input("    Variable name? [weektweethisto] ")
+            if variablename == "":
+                variablename = "weektweethisto"
+            for accountname in accountlist:
+                try:
+                    radar_plot_week(variablename,accountname,twodimensional_dataframe_dict)
+                except:
+                    print("Exception:",accountname)                    
+        elif command in ["S2","s2"]:
             variablename = input("    Variable name? [bursthisto] ")
             if variablename == "":
                 variablename = "bursthisto"
